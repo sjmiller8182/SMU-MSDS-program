@@ -1,0 +1,179 @@
+---
+title: "Live Session Assignment Unit 3"
+author: "Stuart Miller"
+date: "5/23/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+I used the following commands to clone the repo:
+
+* cd ~/projects
+* git clone git@github.com:awesomedata/awesome-public-datasets.git
+
+# Question 2
+
+## Part a
+```{r}
+
+# path to file on local
+path <- '/home/stuart/courses/Doing-Data-Science/Unit_3/awesome-public-datasets/Datasets/'
+file <- 'titanic.csv/titanic.csv'
+
+# read in csv to data.frame
+df <- read.csv(paste(path,file,sep = ''))
+
+```
+
+## Part b
+
+```{r}
+# print a table containing the count of males and females on the titanic
+print(table(df$Sex))
+```
+
+
+```{r}
+barplot(table(df$Sex), main = 'Count of Male and Female Passengers on the Titanic',
+        xlab = 'Gender', ylab = 'Count')
+```
+
+## Part c
+
+```{r}
+# calculate means for Age, Fare, and Survived variables
+mean.vars <- c('Age','Fare','Survived')
+apply(df[mean.vars], 2, function(x) mean(x,na.rm=T))
+```
+
+# Question 3
+
+```{r}
+
+# path to file on local
+path <- '/home/stuart/courses/Doing-Data-Science/Unit_3/'
+file <- 'sleep_data_01.csv'
+
+# read in csv to data.frame
+df <- read.csv(paste(path,file,sep = ''))
+
+helper <- function(data){
+  # calculate the following statistics by name from the data frame
+  Age.median <- median(data$Age, na.rm = TRUE)
+  Duration.minimum <- min(data$Duration, na.rm = TRUE)
+  Duration.maximum <- max(data$Duration, na.rm = TRUE)
+  RSES.sd <- sd(data$RSES, na.rm = TRUE)
+  RSES.mean <- mean(data$RSES, na.rm = TRUE)
+  
+  # generate a report from the data
+  report <- data.frame(Age.median, 
+                       RSES.mean / 5, 
+                       RSES.sd / 5,
+                       Duration.maximum-Duration.minimum)
+  
+  # give descriptive names to the dataframe columns
+  names(report) <- c('MedianAge','SelfEsteem','SE_SD','DurationRange')
+  report
+}
+
+helper(df)
+
+```
+
+# Question 4
+
+## Part a.
+Used the following command to install package
+
+* install.packages("fivethirtyeight")
+
+## Part b.
+
+Get the name of the 22nd dataset.
+
+```{r}
+library(fivethirtyeight)
+
+a <- data(package = "fivethirtyeight")
+a <-a$results[22,][['Item']]
+df <- a
+df
+```
+
+## Part c.
+
+The URL associated with the 22nd dataset is: http://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/
+
+## Part d.
+
+```{r}
+# load the 22nd data set from fivethirtyeight into df and get dims
+df <- college_recent_grads
+dim(df)
+```
+
+The output means there are 173 observations of 21 variables or 173 rows and 21 columns in this dataset.
+
+# Question 5
+
+## Part a.
+
+```{r}
+# get the names of the columns of df
+names(df)
+columns.names <- names(df)
+```
+
+```{r}
+# count the number of columns in df
+length(columns.names)
+```
+
+## Part b.
+
+```{r}
+#create a table from major_category
+major_count <- table(df$major_category)
+```
+
+
+## Part c.
+
+```{r fig1, fig.height = 10, fig.width = 10}
+# create bar chart of the college majors
+par(mar = c(15,4,4,2) + 0.5)
+barplot(major_count, las = 2,
+        main = 'Frequency of Recent College Majors',
+        ylab = 'Count of Major')
+mtext("College Major", side=1, line=13)
+```
+
+## Part d.
+
+```{r}
+write.csv(df,file = paste(path,'college_recent_grads.csv',sep = ''),row.names =FALSE)
+```
+
+
+# Question 6
+
+Github link: https://github.com/sjmiller8182/SMU-MSDS-program
+
+
+
+
+
+
+
+
+
+
+
+
+
+
