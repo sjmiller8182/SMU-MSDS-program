@@ -466,20 +466,26 @@ helper(df)</code></pre>
 <p>Get the name of the 22nd dataset.</p>
 <pre class="r"><code>library(fivethirtyeight)
 
+# puts the 22nd dataset from 538 into df
+
 a &lt;- data(package = &quot;fivethirtyeight&quot;)
-a &lt;-a$results[22,][['Item']]
-df &lt;- a
-df</code></pre>
+df &lt;-get(a$results[22,'Item'])
+
+# print name of dataset
+a$results[22,][['Item']]</code></pre>
 <pre><code>## [1] &quot;college_recent_grads&quot;</code></pre>
 </div>
 <div id="part-c." class="section level2">
 <h2>Part c.</h2>
+<pre class="r"><code># use vignette to get PDF of package description
+vignette(&quot;fivethirtyeight&quot;, package = &quot;fivethirtyeight&quot;)</code></pre>
+<pre><code>## starting httpd help server ... done</code></pre>
+<pre class="r"><code># find URL for corresponding data set name in file manually</code></pre>
 <p>The URL associated with the 22nd dataset is: <a href="http://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/" class="uri">http://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/</a></p>
 </div>
 <div id="part-d." class="section level2">
 <h2>Part d.</h2>
-<pre class="r"><code># load the 22nd data set from fivethirtyeight into df and get dims
-df &lt;- college_recent_grads
+<pre class="r"><code># get dims of data in df
 dim(df)</code></pre>
 <pre><code>## [1] 173  21</code></pre>
 <p>The output means there are 173 observations of 21 variables or 173 rows and 21 columns in this dataset.</p>

@@ -99,21 +99,30 @@ Get the name of the 22nd dataset.
 ```{r}
 library(fivethirtyeight)
 
+# puts the 22nd dataset from 538 into df
+
 a <- data(package = "fivethirtyeight")
-a <-a$results[22,][['Item']]
-df <- a
-df
+df <-get(a$results[22,'Item'])
+
+# print name of dataset
+a$results[22,][['Item']]
 ```
 
 ## Part c.
+
+```{r}
+# use vignette to get PDF of package description
+vignette("fivethirtyeight", package = "fivethirtyeight")
+
+# find URL for corresponding data set name in file manually
+```
 
 The URL associated with the 22nd dataset is: http://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/
 
 ## Part d.
 
 ```{r}
-# load the 22nd data set from fivethirtyeight into df and get dims
-df <- college_recent_grads
+# get dims of data in df
 dim(df)
 ```
 
