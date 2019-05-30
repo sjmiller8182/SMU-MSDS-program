@@ -1,0 +1,59 @@
+---
+title: "Simple Twitter Access with R"
+output: html_notebook
+---
+
+Based on example from https://towardsdatascience.com/access-data-from-twitter-api-using-r-and-or-python-b8ac342d3efe
+
+## Requirements
+
+* twitteR package
+* Twitter developer access token ([see link](https://towardsdatascience.com/access-data-from-twitter-api-using-r-and-or-python-b8ac342d3efe))
+
+I have the library installed already and an access key so I will go ahead with an example. Check the link for instruction on getting an access key.
+
+```{r}
+# load the library
+library(twitteR)
+```
+
+## Basic Example
+
+**1. Authenticate with access keys.**
+
+```{r}
+# I have my access tokens stored in a csv for 'easy access'
+twitterAccess <- read.csv('~/Dropbox/twitterAcess.csv')
+
+# authenticate
+with(twitterAccess, setup_twitter_oauth(as.character(APIKey),
+                                        as.character(APISecretKey),
+                                        as.character(AccessToken),
+                                        as.character(AccessTokenSecret)))
+```
+
+**2. Query twitter search for the author of the linked example.**
+
+* `searchTwitter` returns a data structure called 'twList'
+* `twListToDF` converts a twList to a data.frame
+
+```{r}
+# query the twitter handle of author of linked example
+# get 6 tweets (n = 6)
+tw = searchTwitter('@GalarnykMichael', n = 5)
+d = twListToDF(tw)
+```
+
+**3. Look at the available fields from the query**
+
+```{r}
+# get names of data.frame `d`
+names(d)
+```
+
+**4. Get the users and associated text**
+
+```{r}
+# Note: paste auto iterates long the sequences (don't need a for loop)
+print(paste(d$screenName, d$text, sep = ': '))
+```
