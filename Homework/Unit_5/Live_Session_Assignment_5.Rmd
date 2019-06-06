@@ -1,0 +1,132 @@
+---
+title: "Live_Session_Assignment_5"
+author: "Stuart Miller"
+date: "6/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objective
+
+Read in data from yob2016.txt and yob2015.txt. These files contain baby names for years 2016 and 2015, along with occurence of name by gender. The data is merged along gender and name. Then the total for each name is summed and ordered by the sum. The top 10 girls names are reported to a file: top_girls_names.csv.
+
+# Requirements
+
+The following files are required:
+
+* yob2016.txt
+* yob2015.txt
+
+# Question 1
+
+## Part A
+
+```{r}
+# read in file with baby names
+df <- read.csv("yob2016.txt", sep = ';', header = F)
+# set column names
+names(df) <- c("name","gender","count")
+# convert names from factor to character
+df$name <- as.character(df$name)
+```
+
+## Part B
+
+```{r}
+# look at the summary of the imported data
+summary(df)
+```
+
+```{r}
+# look at the structure of the imported data
+str(df)
+```
+
+## Part C
+
+```{r}
+# get location of the error (obs index)
+error_obs <- grep(".*yyy",df$name)
+# print the error row for confirmation
+print(df[error_obs,])
+```
+
+## Part D
+
+```{r}
+# remove bad observation
+y2016 <- df[-error_obs,]
+```
+
+# Question 2
+
+## Part A
+
+```{r}
+# import names for 2015
+y2015 <- read.csv("yob2015.txt", header = F)
+# set column names
+names(y2015) <- c("name","gender","count")
+# convert names from factor to character
+y2015$name <- as.character(y2015$name)
+```
+
+## Part B
+
+```{r}
+tail(y2015, 10)
+```
+
+Interestingly, all the names at the end of the file start with 'Zy'. Likely this list is in alphabetical order.
+
+## Part C
+
+```{r}
+# merge by gender then name to aviod mismatches between gender
+final <- merge(y2016, y2015, by = c('gender',"name"))
+names(final)[3] <- 'count_2016'
+names(final)[4] <- 'count_2015'
+head(final,10)
+```
+
+```{r}
+# check for any NAs after merge
+any(is.na(final))
+```
+
+# Question 3
+
+## Part A
+
+```{r}
+# create new column 'Total' with sum of counts in 2015, 2016
+final$Total <- final$count_2016 + final$count_2015
+```
+
+## Part B
+
+```{r}
+# sort by 'Total'
+final <- final[order(-final$Total),]
+head(final,10)
+```
+
+## Part C
+
+```{r}
+# only need most popular girl's names
+head(final[final$gender == 'F',],10)
+```
+
+## Part D
+
+```{r}
+# get top 10 girls names without unneeded columns
+top_girls_names <- head(final[final$gender == 'F',c('name','Total')],10)
+# print top 10 girls names to file
+write.csv(top_girls_names, file = './top_girls_names.csv', row.names = F)
+```
+
