@@ -1,5 +1,7 @@
 # Codebook for Live_Session_Assignment_5
 
+**Code file:** Live_Session_Assignment_5.Rmd
+
 ## Required Files:
 
 Code requires the following files:
