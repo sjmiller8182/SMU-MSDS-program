@@ -1,0 +1,146 @@
+---
+title: "Live_Session_Assignment_6"
+author: "Stuart Miller"
+date: "6/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries, message=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+# Background
+
+We are looking for areas that might need additional VA hospitals offering mental health services in the  48 contiguous states of the United States.
+
+**Disclaimer:** While these are real data, the assignment is not an endorsement for any particular position on medical affairs or building hospitals. It is for instructional use only. 
+
+# Question 1
+
+Load the data from [National Mental Health Services Survey (N-MHSS): 2015](https://datafiles.samhsa.gov/study-dataset/national-mental-health-services-survey-2015-n-mhss-2015-ds0001-nid17098), which contains all known healthcare centers offering mental health services in the United States in 2015.
+
+## Part A
+
+Load the healthcare center data set.
+
+```{r}
+# load from National Mental Health Services Survey (N-MHSS): 2015
+# data set is loaded under object name mh2015pf
+load("./N-MHSS-2015-DS0001-bndl-data-r/N-MHSS-2015-DS0001-data/N-MHSS-2015-DS0001-data-r.rda")
+```
+
+## Part B
+
+Get all the state codes in the data.frame.
+
+```{r}
+# get unique state code
+states <- unique(as.character(mh2015_puf$LST))
+```
+
+## Part C
+
+Remove the codes which do not corresponding to the 48 contiguous states.
+
+```{r}
+remove.states <- c("AS    ", "GU    ", "PR    ", "VI    ", "AK    ", "HI    ")
+states.of.interest <- states[! states %in% remove.states]
+filtered <- mh2015_puf[which(mh2015_puf$LST %in% states.of.interest),]
+filtered <- data.frame(filtered %>% count(LST))
+```
+
+## Part D
+
+Plot the number of known healthcare centers offering mental health services in each state of mainland United States.
+
+```{r fig.width=15, fig.height=7}
+ggplot(filtered, aes(x = LST, y = n, fill = LST)) + 
+  geom_bar(stat = 'identity') +
+  ggtitle("Number of Healthcare Centers Offering Mental Health Services") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab('State') +
+  ylab('Number of Health Centers')
+```
+
+# Question 2
+
+## Part A
+
+Load 'statesize.csv', which contains sizes of states. Notice that the dataframes cannot be merged becuase of the extra white space in the abbreviation column of the healthcare center data.
+
+```{r}
+# birng in state sizes
+state.sizes <- read.csv("./statesize.csv")
+
+# names values in LST and state.sizes$Abbrev don't match 
+# because of the white space in LST at the end of the abbreviation
+print("Abbreviations from LST")
+print(paste(filtered$LST))
+
+print("Abbreviations from state.sizes")
+print(state.sizes$Abbrev)
+```
+
+## Part B
+
+Remve the white space from the healthcare center data and merge with the state size data.
+
+```{r}
+# fix remove extra whitespace in LST
+filtered$LST <- gsub('\\s+', '', filtered$LST)
+# merge filtered and state.sizes
+state.sizes$Abbrev <- as.character(state.sizes$Abbrev)
+states.hospitals.sizes <- merge(filtered, state.sizes, by.x = 'LST', by.y = 'Abbrev')
+```
+
+## Part C
+
+Create a new variable in the merged data set that represents the density of healthcare centers per state (number of healthcare centers per 1000 square miles).
+
+```{r}
+# create new column for hospitals per thousand miles
+states.hospitals.sizes$HospDensity <- states.hospitals.sizes$n/states.hospitals.sizes$SqMiles*1000
+```
+
+## Part D
+
+Plot the density of healthcare centers per state.
+
+```{r fig.width=15, fig.height=7}
+ggplot(states.hospitals.sizes,
+       aes(x = reorder(LST, -HospDensity), y = HospDensity, fill = Region)) + 
+  geom_bar(stat = 'identity') +
+  ggtitle("Density of Healthcare Centers Offering Mental Health Services") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab('State') +
+  ylab('Health Centers Density (count per 1000 SqMi)') +
+  scale_fill_brewer(palette="Dark2")
+```
+
+## Part E
+
+*Some Observations About The Data*
+
+* The density of health centers is much higher in the northeastern region of the United States, particularly in the following states:
+  * Rhode Island
+  * Connecticut
+  * Massachusetts
+  * Maryland
+  * New Jersey
+  * New York
+* All of these states are paritucally small.
+* Rhode Island has the highest density, but a comparitively low number of health centers.
+* California has a high number of health centers, but low density.
+
+```{r}
+with(states.hospitals.sizes, tapply(SqMiles, Region, mean))/1000
+```
+
+* The average area (in 1k square miles) of states increases from east to west.
+
+Because of the differences in sizes of states and various number of population centers within states, it would likely be necessary to look at the density of health centers relative to population centers (cities, metroplexes, etc.) to see the variation that is not obvious at the state level. This mapping would help identify large population areas where there are lower numbers of health centers.
