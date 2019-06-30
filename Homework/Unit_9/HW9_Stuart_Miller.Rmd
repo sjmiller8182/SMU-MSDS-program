@@ -1,0 +1,72 @@
+---
+title: "Live_Session_Assignment_9"
+author: "Stuart Miller"
+date: "June 30, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup
+
+```{r, message=FALSE}
+# load libraries
+library(tidyverse)
+```
+
+# Part A
+
+## 1
+
+```{r}
+# load data
+beers <- read.csv('./Beers.csv')
+breweries <- read.csv('./Breweries.csv')
+# convert column name to match
+names(breweries)[1] <- names(beers)[5]
+```
+
+## 2
+
+```{r}
+# merge the data
+merged_data <- merge(beers,breweries, by = 'Brewery_id')
+```
+
+## 3
+
+```{r}
+# convert column to char for easy
+merged_data$State <- as.character(merged_data$State)
+# remove whitespace
+merged_data$State <- gsub('\\s+', '', merged_data$State)
+```
+
+## 4
+
+```{r}
+# select data in TX and CO, drop NAs
+beerCOTX <- merged_data %>% 
+  na.omit() %>% 
+  filter(State == 'TX' | State == 'CO')
+```
+
+## 5
+
+```{r}
+beerCOTX <- beerCOTX %>% arrange(IBU)
+```
+
+# Part B
+
+```{r}
+# plot ABV vs IBU for CO and TX
+ggplot(beerCOTX, aes(x = IBU, y = ABV)) +
+  geom_point() +
+  facet_wrap( ~State) + 
+  labs(title = 'ABV vs IBU for Colorado and Texas') +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
