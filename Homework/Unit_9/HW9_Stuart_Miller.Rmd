@@ -61,6 +61,8 @@ beerCOTX <- beerCOTX %>% arrange(IBU)
 
 # Part B
 
+## 6
+
 ```{r}
 # plot ABV vs IBU for CO and TX
 ggplot(beerCOTX, aes(x = IBU, y = ABV)) +
