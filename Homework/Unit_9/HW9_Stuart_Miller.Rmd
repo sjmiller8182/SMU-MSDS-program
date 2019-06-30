@@ -72,3 +72,23 @@ ggplot(beerCOTX, aes(x = IBU, y = ABV)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+# Part C
+
+## 7
+
+```{r}
+bTX <- beerCOTX %>% filter(State == 'TX')
+lmTX <- lm(ABV ~ IBU, bTX)
+with(bTX, plot(IBU, ABV, main = 'ABV vs IBU for Texas'))
+abline(lmTX)
+```
+
+```{r}
+bCO <- beerCOTX %>% filter(State == 'CO')
+lmCO <- lm(ABV ~ IBU, bCO)
+with(bCO, plot(IBU, ABV, main = 'ABV vs IBU for Colorado'))
+abline(lmCO)
+```
+
+## 8
+
