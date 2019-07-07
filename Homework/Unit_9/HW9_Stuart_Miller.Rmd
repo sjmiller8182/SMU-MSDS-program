@@ -74,7 +74,7 @@ ggplot(beerCOTX, aes(x = IBU, y = ABV)) +
 
 # Part C
 
-## 7
+## 7 and 8
 
 ```{r}
 bTX <- beerCOTX %>% filter(State == 'TX')
@@ -83,6 +83,13 @@ with(bTX, plot(IBU, ABV, main = 'ABV vs IBU for Texas'))
 abline(lmTX)
 ```
 
+### Addressing Assumptions for Linear Regression
+
+* There does not appear to be significant evidence of normal distributions of ABV for fixed values of IBU for these beers.
+* There does not appear to be much evidence against a linear relationship between ABV and IBU for these beers.
+* There does not appear to be much evidence against constant variance of the normal distributions.
+* We will assume that the observations are independant.
+
 ```{r}
 bCO <- beerCOTX %>% filter(State == 'CO')
 lmCO <- lm(ABV ~ IBU, bCO)
@@ -90,5 +97,247 @@ with(bCO, plot(IBU, ABV, main = 'ABV vs IBU for Colorado'))
 abline(lmCO)
 ```
 
-## 8
+### Addressing Assumptions for Linear Regression
 
+* There does not appear to be significant evidence of normal distributions of ABV for fixed values of IBU for these beers.
+* There does not appear to be much evidence against a linear relationship between ABV and IBU for these beers.
+* There does not appear to be much evidence against constant variance of the normal distributions.
+* We will assume that the observations are independant.
+
+# Part D
+
+## 9
+
+```{r}
+# print the summary table
+summary(lmTX)
+```
+
+There is overwhelming evidence to suggest that the slope of ABV vs IBU is different than zero (p-value < 0.0001). For every unit increase in IBU, there is an associated increase in the mean ABV by 4.172e-04.
+
+```{r}
+# print the summary table
+summary(lmCO)
+```
+
+There is overwhelming evidence to suggest that the slope of ABV vs IBU is different than zero (p-value < 0.0001). For every unit increase in IBU, there is an associated increase in the mean ABV by 3.676e-04.
+
+```{r}
+# plot ABV vs IBU for CO and TX
+ggplot(beerCOTX, aes(x = IBU, y = ABV)) +
+  geom_point() +
+  facet_wrap( ~State) + 
+  labs(title = 'ABV vs IBU for Colorado and Texas') +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Based on visual inspection of both scatter plots, there does not seem to be a significant difference between the two relationships.
+
+## 10
+
+
+```{r}
+# print the summary table
+confint(lmTX)
+```
+
+We are 95% confident that the associated increase of ABV with unit increase in IBU is between 0.00034 and 0.00049 for Texas beers from this dataset.
+
+```{r}
+# print the summary table
+confint(lmCO)
+```
+
+We are 95% confident that the associated increase of ABV with unit increase in IBU is between 0.00030 and 0.00043 for Colorado beers from this dataset.
+
+Since the confidence intervals for the slope of ABV vs IBU for Colorado and Texas beers, the difference between the slopes is not significant at the 95% confidence level.
+
+# Part E
+
+## 11
+
+```{r}
+# create square of IBU column
+beerCOTX <- beerCOTX %>% mutate(IBU2 = IBU^2)
+head(beerCOTX)
+```
+
+## 12
+
+Spilt data into training and testing sets for model validation
+
+```{r}
+beerTX <- beerCOTX %>% 
+  na.omit() %>% 
+  filter(State == 'TX')
+
+## 60% of the sample size
+smp_size <- floor(0.60 * nrow(beerTX))
+
+# seed random
+set.seed(123)
+
+train_ind <- sample(seq_len(nrow(beerTX)), size = smp_size)
+
+# get training and testing data
+trainingTX <- beerTX[train_ind, ]
+testingTX <- beerTX[-train_ind, ]
+
+beerCO <- beerCOTX %>% 
+  na.omit() %>% 
+  filter(State == 'CO')
+
+## 60% of the sample size
+smp_size <- floor(0.60 * nrow(beerCO))
+
+# seed random
+set.seed(123)
+
+train_ind <- sample(seq_len(nrow(beerCO)), size = smp_size)
+
+# get training and testing data
+trainingCO <- beerCO[train_ind, ]
+testingCO <- beerCO[-train_ind, ]
+```
+
+## 13
+
+Define some helper functions for the external cross validation analysis.
+
+```{r}
+# define a function for ASE calculation
+ASE <- function(y, y_hat) {
+  result <- sum((y-y_hat)^2)/length(y)
+  return(result)
+}
+
+# get lm coefficients
+getLMCoe <- function(model, linearM = TRUE){
+  if (linearM) {
+    beta1 <- as.numeric(lmCO$coefficients['IBU'])
+    beta0 <- as.numeric(lmCO$coefficients['(Intercept)'])
+    return(c(beta0, beta1))
+  } else {
+    beta2 <- as.numeric(lmCO$coefficients['IBU2'])
+    beta1 <- as.numeric(lmCO$coefficients['IBU'])
+    beta0 <- as.numeric(lmCO$coefficients['(Intercept)'])
+    return(c(beta0, beta1, beta2))
+  }
+}
+
+# predict based on model
+pred <-function(X, model, linearM = TRUE){
+  if (linearM) {
+    y_h <- model[1] + model[2]*X
+  } else {
+    y_h <- model[1] + model[2]*X + model[2]*(X^2)
+  }
+  return(y_h)
+}
+
+# define a function to calculate model loss from dataframe and model inputs
+calcModelLoss <- function(df, model, linearM = TRUE){
+  X <- df$IBU
+  predABV <- pred(X, getLMCoe(model), linearM)
+  ASE(df$ABV, predABV)
+}
+```
+
+Check if linear model or quadratic model works best for the beers from TX and CO.
+
+```{r}
+# train linear models for both states
+lmTX <- lm(ABV ~ IBU, trainingTX)
+lmCO <- lm(ABV ~ IBU, trainingCO)
+
+# train linear-quadratic models for both states
+lmqTX <- lm(ABV ~ IBU + IBU2, trainingTX)
+lmqCO <- lm(ABV ~ IBU + IBU2, trainingCO)
+
+# test linear model on TX data
+print('test linear model on TX data')
+calcModelLoss(testingTX, lmTX)
+# test quadratic model on TX data
+print('test quadratic model on TX data')
+calcModelLoss(testingTX, lmqTX, F)
+# test linear model on CO data
+print('test linear model on CO data')
+calcModelLoss(testingCO, lmCO)
+# test quadratic model on TX data
+print('test quadratic model on CO data')
+calcModelLoss(testingCO, lmqCO, F)
+```
+
+### Analysis of Modeling
+
+Brewmeisters want to determine if a quadratic model or a linear model represents the data best. 
+
+**Linear Model**
+
+$$ABV = \beta_0 + \beta_1(IBU)$$
+
+**Quadratic Model**
+
+$$ABV = \beta_0 + \beta_1(IBU)+\beta_2(IBU)^2$$
+
+To determine the best fitting model, the models will be fit to the data with a 'training' set and tested with a 'test' set. The quality of each model will be determined using average squared error (ASE) as a loss function. A loss function calculates the error between the actual responses and the predicted responses (ABV in this case). Naturally, a model with a lower loss is a better fit to the data. The tables below shows the ASE for models of 'ABV explained by IBU' for Texas and Colorado beers.
+
+**Loss Function**
+
+$$ASE = \frac{\sum_{n=1}^{N} (y_i - \hat{y}_i)^2 }{N}$$
+
+#### Texas Model Validation Results
+
+| Model         | ASE      | 
+|:-------------:|---------:|
+| Linear        | 8.14e-05 |
+| Quadratic     | 0.45     |
+
+#### Colorado Model Validation Results
+
+| Model         | ASE      | 
+|:-------------:|---------:|
+| Linear        | 1.12e-04 |
+| Quadratic     | 1.91     |
+
+In both cases, the linear model has a lower ASE, 8.14e-05 and 1.12e-04, for Texas and Colorado respectively; while the quadratic model has a higher ASE, 0.45 and 1.91, for Texas and Colorado respectively. For both Texas and Colorado beers, this cross validation provides evidence that the linear model is a better fit for the relationship between ABV and IBU.
+
+## 13 - Bonus
+
+Another source of evidence is the statistical significance of the quadratic fit. The `lm` function provides statistical significance directly from the fit.
+
+```{r}
+summary(lmTX)
+confint(lmTX)
+summary(lmqTX)
+```
+
+#### Significance of Model Parameters for Texas
+
+When the two models are fit, the statistical results indicate that the leading order parameter for the linear model is statistically significant, but the leading order parameter of the quadratic fit is not statistically significant at the 95% confidence level. This is consistent with the results of the ASE model validation.
+
+##### Linear Model
+
+There is strong evidence that $\hat{\beta_1}$ is different than zero (p-value < 0.0001). The best estimate of $\hat{\beta_1}$ is 4.601e-04 with 95% confidence interval of [3.74e-4,5.46e-4].
+
+##### Quadratic Model
+
+There no apparent evidence that $\hat{\beta_2}$ is different than zero (p-value = 0.7658).
+
+```{r}
+summary(lmCO)
+confint(lmCO)
+summary(lmqCO)
+```
+
+#### Significance of Model Parameters for Colorado
+
+When the two models are fit, the statistical results indicate that the leading order parameter for the linear model is statistically significant, but the leading order parameter of the quadratic fit is not statistically significant at the 95% confidence level. This is consistent with the results of the ASE model validation.
+
+##### Linear Model
+
+There is strong evidence that $\hat{\beta_1}$ is different than zero (p-value < 0.0001). The best estimate of $\hat{\beta_1}$ is 3.378e-04 with 95% confidence interval of [2.48e-4,4.27e-4].
+
+##### Quadratic Model
+
+There no apparent evidence that $\hat{\beta_2}$ is different than zero (p-value = 0.627).
